@@ -1,6 +1,12 @@
+from typing import Dict
 from django.contrib.auth import password_validation, authenticate
 from rest_framework import serializers
 from authenticationbackend.utils import validate_incoming_data
+from rest_framework_simplejwt.serializers import (
+    TokenRefreshSerializer as RefreshSerializer,
+    TokenBlacklistSerializer,
+)
+from rest_framework_simplejwt.exceptions import InvalidToken
 from .models import User
 
 
@@ -53,3 +59,28 @@ class SignInSerializer(serializers.Serializer):
 
         data["user"] = user
         return data
+
+
+class TokenRefreshSerializer(RefreshSerializer):
+    refresh = None
+
+    def validate(self, data):
+        refresh_token = self.context.get("request").COOKIES.get("refresh", None)
+
+        if not refresh_token:
+            raise InvalidToken()
+
+        data["refresh"] = refresh_token
+        return super().validate(data)
+
+
+class LogoutSerializer(TokenBlacklistSerializer):
+    refresh = None
+
+    def validate(self, data):
+        refresh = self.context.get("request").COOKIES.get("refresh")
+        if not refresh:
+            raise serializers.ValidationError({"error": "Invalid request."})
+
+        data["refresh"] = refresh
+        return super().validate(data)
