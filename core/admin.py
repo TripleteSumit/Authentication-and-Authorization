@@ -1,8 +1,10 @@
 from django.contrib import admin
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import User
 from .forms import UserChangeForm, UserCreationForm
+
+admin.site.name = "RBAC Model"
 
 
 class UserAdmin(BaseUserAdmin):
@@ -36,4 +38,9 @@ class UserAdmin(BaseUserAdmin):
     filter_horizontal = []
 
 
+class PermissionAdmin(admin.ModelAdmin):
+    list_display = ("name", "codename")
+
+
 admin.site.register(User, UserAdmin)
+admin.site.register(Permission, PermissionAdmin)
