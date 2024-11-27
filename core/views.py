@@ -30,7 +30,7 @@ class SignUpView(APIView):
             {
                 "status": "failed",
                 "message": "Invalid data",
-                "errors": serializer.errors,
+                "details": serializer.errors,
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
@@ -71,7 +71,7 @@ class SignInView(APIView):
             {
                 "status": "failed",
                 "message": "Something went wrong.",
-                "errors": serializer.errors,
+                "details": serializer.errors,
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
@@ -107,7 +107,7 @@ class LogoutView(APIView):
             {
                 "status": "failed",
                 "message": "Invalid data",
-                "errors": serializer.errors.get("error") or serializer.errors,
+                "details": serializer.errors,
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
