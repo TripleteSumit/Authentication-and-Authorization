@@ -1,4 +1,3 @@
-from typing import Dict
 from django.contrib.auth import password_validation, authenticate
 from rest_framework import serializers
 from authenticationbackend.utils import validate_incoming_data
