@@ -3,6 +3,7 @@
 ## Table of Contents
 
 - [Project Overview](#project-overview)
+- [Functionality](#functionality)
 - [Setup and Installation](#setup-and-installation)
 - [Running the Project](#running-the-project)
 - [API Endpoints](#api-endpoints)
