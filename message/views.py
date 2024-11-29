@@ -4,12 +4,19 @@ from rest_framework.views import APIView
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from .models import Comment
+from .permission import HasRole
 from .serializer import CommentSerializer
 
 
 class CommentView(APIView, LimitOffsetPagination):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasRole]
     serializer_class = CommentSerializer
+    required_role = {
+        "GET": ["__all__"],
+        "POST": ["__all__"],
+        "PATCH": ["admin", "moderator"],
+        "DELETE": ["__all__"],
+    }
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -33,9 +40,7 @@ class CommentView(APIView, LimitOffsetPagination):
         )
 
     def get(self, request):
-        queryset = Comment.objects.filter(user=request.user, archived=False).order_by(
-            "-id"
-        )
+        queryset = Comment.objects.filter(archived=False).order_by("-id")
         page = self.paginate_queryset(queryset, request)
         serializer = self.serializer_class(page, many=True)
         return self.get_paginated_response(
@@ -62,9 +67,7 @@ class CommentView(APIView, LimitOffsetPagination):
             )
 
         try:
-            comment_obj = Comment.objects.get(
-                pk=comment_id, user=request.user, archived=False
-            )
+            comment_obj = Comment.objects.get(pk=comment_id, archived=False)
             return comment_obj, None
         except Comment.DoesNotExist:
             return None, Response(
@@ -76,10 +79,10 @@ class CommentView(APIView, LimitOffsetPagination):
         comment_obj, error_response = self._get_comment(request)
         if error_response:
             return error_response
-
+        self.check_object_permissions(request, comment_obj)
         serializer = self.serializer_class(comment_obj, request.data, partial=True)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(updated_by=request.user)
             return Response(
                 {
                     "status": "success",
@@ -101,7 +104,7 @@ class CommentView(APIView, LimitOffsetPagination):
         comment_obj, error_response = self._get_comment(request)
         if error_response:
             return error_response
-
+        self.check_object_permissions(request, comment_obj)
         comment_obj.archived = True
         comment_obj.save(update_fields=["archived"])
         return Response(

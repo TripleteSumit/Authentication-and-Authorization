@@ -1,5 +1,6 @@
 from phonenumber_field.modelfields import PhoneNumberField
 from django.db import models
+from django.contrib.auth.models import Group
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 
@@ -43,18 +44,21 @@ class User(AbstractBaseUser):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
-    # last_login = models.DateTimeField(auto_now=True) no need to add as it is already present by default
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELD = ["phone"]  # email and password are required by default
+    REQUIRED_FIELDS = ["phone"]
 
     objects = UserManager()
 
     def __str__(self):
         return self.email
 
-    def has_perm(self, perm, object=None):
-        return True
+    def has_perm(self, perm, obj=None):
+        if self.is_superuser:
+            return True
+        return Group.objects.filter(
+            name=self.role.capitalize(), permissions__codename=perm.split(".")[1]
+        ).exists()
 
     def has_module_perms(self, app_label):
         return True

@@ -1,11 +1,20 @@
 import os
 from rest_framework import serializers
+from core.models import User
 from .models import Comment
 from authenticationbackend.utils import validate_incoming_data
 
 
+class CommentUserSerailizer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("email", "role")
+
+
 class CommentSerializer(serializers.ModelSerializer):
     message = serializers.CharField(max_length=255)
+    created_by = CommentUserSerailizer(source="user", read_only=True)
+    updated_by = CommentUserSerailizer(read_only=True)
 
     def validate(self, data):
         errors = validate_incoming_data(
@@ -28,4 +37,4 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ("id", "message", "attachment")
+        fields = ("id", "message", "attachment", "created_by", "updated_by")
